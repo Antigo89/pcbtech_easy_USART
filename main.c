@@ -9,9 +9,10 @@ char *pt_buffer;
 
 /****************************** function**********************************/
 void send_USART_STR(char *sendbuffer){
-  while(USART1->CR1 & USART_CR1_TCIE){}
+  while((USART1->SR & USART_SR_TC) == 0){}
   pt_buffer = &(*sendbuffer);
   USART1->CR1 &= ~(USART_CR1_RXNEIE);
+  EXTI->IMR &= ~(EXTI_IMR_IM10|EXTI_IMR_IM11|EXTI_IMR_IM12);
   USART1->DR = (*pt_buffer & (uint16_t)0x01FF);
   USART1->CR1 |= USART_CR1_TCIE;
 }
@@ -66,7 +67,7 @@ int main(void) {
 }
 /***********************interrupts function**************************/
 void EXTI15_10_IRQHandler(void){
-    switch(EXTI->PR & (EXTI_PR_PR10|EXTI_PR_PR11|EXTI_PR_PR12)){
+  switch(EXTI->PR & (EXTI_PR_PR10|EXTI_PR_PR11|EXTI_PR_PR12)){
       case EXTI_PR_PR10:
         send_USART_STR("Button S1\r\n");
         break;
@@ -84,6 +85,7 @@ void USART1_IRQHandler(void){
   if(USART1->SR & USART_SR_TC){
     if(*pt_buffer == '\n'){
       USART1->CR1 &= ~(USART_CR1_TCIE);
+      EXTI->IMR |= EXTI_IMR_IM10|EXTI_IMR_IM11|EXTI_IMR_IM12; 
       USART1->CR1 |= USART_CR1_RXNEIE;
     }else{
       USART1->DR = (*++pt_buffer & (uint16_t)0x01FF);

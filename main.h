@@ -7,9 +7,6 @@
 
 #define USART_BOUDRATE 115200
 
-#define T_BUFFER_MAX 25
-#define R_BUFFER_MAX 4
-
 void RCC_Init(void);
 
 
